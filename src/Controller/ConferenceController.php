@@ -33,7 +33,6 @@ class ConferenceController extends AbstractController
     /**
      * @Route("/conference/{id}", name="conference")
      */
-    //public function show(Environment $twig, Conference $conference, CommentRepository $commentRepository): Response
     public function show(Request $request, Conference $conference, CommentRepository $commentRepository): Response
     {
         $offset = max(0, $request->query->getInt('offset', 0));
@@ -46,4 +45,17 @@ class ConferenceController extends AbstractController
             'next' => min(count($paginator), $offset + CommentRepository::PAGINATOR_PER_PAGE),
         ]));
     }
+
+
+    // /**
+    //  * @Route("/conference/{slug}", name="conference")
+    //  */
+    // public function show(Conference $conference, CommentRepository $commentRepository, ConferenceRepository $conferenceRepository): Response
+    // {
+    //     return new Response($this->twig->render('conference/show.html.twig', [
+    //         'conferences' => $conferenceRepository->findAll(),
+    //         'conference' => $conference,
+    //         'comments' => $commentRepository->findBy(['conference' => $conference], ['createdAt' => 'DESC']),
+    //     ]));
+    // }
 }
