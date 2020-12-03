@@ -7,6 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * @ORM\Entity(repositoryClass=CommentRepository::class)
+ * @ORM\HasLifecycleCallbacks()
  */
 class Comment
 {
@@ -123,6 +124,15 @@ class Comment
         $this->photoFilename = $photoFilename;
 
         return $this;
+    }
+
+    /**
+     * Poniższe zdarzenie jest emitowane, gdy obiekt jest po raz pierwszy zapisany w bazie danych. Gdy tak się stanie, wywołana zostanie metoda setCreatedAtValue().
+     * @ORM\PrePersist
+     */
+    public function setCreatedAtValue()
+    {
+        $this->createdAt = new \DateTime();
     }
 
     public function __toString(): string
