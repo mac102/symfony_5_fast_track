@@ -6,9 +6,12 @@ use App\Repository\ConferenceRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\String\Slugger\SluggerInterface;
 
 /**
  * @ORM\Entity(repositoryClass=ConferenceRepository::class)
+ * @UniqueEntity("slug")
  */
 class Conference
 {
@@ -38,6 +41,11 @@ class Conference
      * @ORM\OneToMany(targetEntity=Comment::class, mappedBy="conference", orphanRemoval=true)
      */
     private $comments;
+
+    /**
+     * @ORM\Column(type="string", length=255, unique=true)
+     */
+    private $slug;
 
     public function __construct()
     {
@@ -118,5 +126,31 @@ class Conference
     public function __toString(): string
     {
         return $this->city . ' ' . $this->year;
+    }
+
+    public function getSlug(): ?string
+    {
+        return $this->slug;
+    }
+
+    public function setSlug(string $slug): self
+    {
+        $this->slug = $slug;
+
+        return $this;
+    }
+
+    /**
+     * Metoda computeSlug() tworzy slug tylko wtedy, gdy aktualny slug jest pusty lub ustawiony na specjalną wartość -. 
+     * Po co nam ta specjalna wartość -? Ponieważ przy dodawaniu konferencji w panelu administracyjnym slug jest wartością wymaganą. Potrzebujemy zatem niepustej wartości która przekaże aplikacji, że chcemy, aby slug został wygenerowany automatycznie.
+     *
+     * @param SluggerInterface $slugger
+     * @return void
+     */
+    public function computeSlug(SluggerInterface $slugger)
+    {
+        if (!$this->slug || '-' === $this->slug) {
+            $this->slug = (string) $slugger->slug((string) $this)->lower();
+        }
     }
 }
