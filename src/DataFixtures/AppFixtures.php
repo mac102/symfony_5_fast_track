@@ -1,0 +1,50 @@
+<?php
+
+namespace App\DataFixtures;
+
+use Doctrine\Bundle\FixturesBundle\Fixture;
+use Doctrine\Persistence\ObjectManager;
+use App\Entity\Comment;
+use App\Entity\Conference;
+use App\Entity\Admin;
+use Symfony\Component\Security\Core\Encoder\EncoderFactoryInterface;
+
+class AppFixtures extends Fixture
+{
+    private $encoderFactory;
+
+    public function __construct(EncoderFactoryInterface $encoderFactory)
+    {
+        $this->encoderFactory = $encoderFactory;
+    }
+
+    public function load(ObjectManager $manager)
+    {
+        $city1 = new Conference();
+        $city1->setCity('Wawa');
+        $city1->setYear('2018');
+        $city1->setIsInternational(true);
+        $manager->persist($city1);
+
+        $city2 = new Conference();
+        $city2->setCity('Krakow');
+        $city2->setYear('2020');
+        $city2->setIsInternational(false);
+        $manager->persist($city2);
+
+        $comment1 = new Comment();
+        $comment1->setConference($city1);
+        $comment1->setAuthor('Fabien');
+        $comment1->setEmail('fabien@example.com');
+        $comment1->setText('This was a great conference.');
+        $manager->persist($comment1);
+
+        $admin = new Admin();
+        $admin->setRoles(['ROLE_ADMIN']);
+        $admin->setUsername('admin');
+        $admin->setPassword($this->encoderFactory->getEncoder(Admin::class)->encodePassword('admin', null));
+        $manager->persist($admin);
+
+        $manager->flush();
+    }
+}
