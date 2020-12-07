@@ -57,7 +57,7 @@ class Comment
     /**
      * @ORM\Column(type="string", length=255, options={"default": "submitted"})
      */
-    private $state;
+    private $state = 'submitted';
 
     public function getId(): ?int
     {
