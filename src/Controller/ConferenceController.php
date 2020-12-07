@@ -39,7 +39,7 @@ class ConferenceController extends AbstractController
         $response = new Response($this->twig->render('conference/index.html.twig', [
             'conferences' => $conferenceRepository->findAll(),
         ]));
-        $response->setSharedMaxAge(3600); // do cache na 1h
+        $response->setSharedMaxAge(600); // do cache
 
         return $response;
     }
