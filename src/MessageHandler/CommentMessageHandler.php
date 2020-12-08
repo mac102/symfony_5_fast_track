@@ -10,6 +10,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Workflow\WorkflowInterface;
+use App\ImageOptimizer;
 
 class CommentMessageHandler implements MessageHandlerInterface
 {
@@ -19,15 +20,27 @@ class CommentMessageHandler implements MessageHandlerInterface
     private $bus;
     private $workflow;
     private $logger;
+    private $imageOptimizer;
+    private $photoDir;
 
-    public function __construct(EntityManagerInterface $entityManager, SpamChecker $spamChecker, CommentRepository $commentRepository, MessageBusInterface $bus, WorkflowInterface $commentStateMachine, LoggerInterface $logger = null)
-    {
+    public function __construct(
+        EntityManagerInterface $entityManager,
+        SpamChecker $spamChecker,
+        CommentRepository $commentRepository,
+        MessageBusInterface $bus,
+        WorkflowInterface $commentStateMachine,
+        ImageOptimizer $imageOptimizer,
+        string $photoDir,
+        LoggerInterface $logger = null
+    ) {
         $this->entityManager = $entityManager;
         $this->spamChecker = $spamChecker;
         $this->commentRepository = $commentRepository;
         $this->bus = $bus;
         $this->workflow = $commentStateMachine;
         $this->logger = $logger;
+        $this->imageOptimizer = $imageOptimizer;
+        $this->photoDir = $photoDir;
     }
 
     /**
@@ -56,10 +69,16 @@ class CommentMessageHandler implements MessageHandlerInterface
             $this->entityManager->flush();
 
             $this->bus->dispatch($message);
-        } elseif ($this->workflow->can($comment, 'publish') || $this->workflow->can($comment, 'publish_ham')) {
+        } else if ($this->workflow->can($comment, 'publish') || $this->workflow->can($comment, 'publish_ham')) {
             $this->workflow->apply($comment, $this->workflow->can($comment, 'publish') ? 'publish' : 'publish_ham');
             $this->entityManager->flush();
-        } elseif ($this->logger) {
+        } elseif ($this->workflow->can($comment, 'optimize')) {
+            if ($comment->getPhotoFilename()) {
+                $this->imageOptimizer->resize($this->photoDir . '/' . $comment->getPhotoFilename());
+            }
+            $this->workflow->apply($comment, 'optimize');
+            $this->entityManager->flush();
+        } else if ($this->logger) {
             $this->logger->debug('Dropping comment message', ['comment' => $comment->getId(), 'state' => $comment->getState()]);
         }
     }
