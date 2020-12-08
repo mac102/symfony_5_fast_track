@@ -118,6 +118,9 @@
             "./config/routes/easy_admin.yaml"
         ]
     },
+    "imagine/imagine": {
+        "version": "1.2.4"
+    },
     "monolog/monolog": {
         "version": "2.1.1"
     },
